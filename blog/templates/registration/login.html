@@ -1,0 +1,29 @@
+{% extends '../base.html' %}
+
+{% block body %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 col-lg-offset-4">
+            <div class="panel">
+                <legend class="text-center">
+                    <h3>Log in to your account.</h3>
+                </legend>
+                <form class="form" role="form" method="post">
+                    <input type="hidden" name="next" value="{{ next|escape }}" />
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    {% for hidden in form.hidden_fields %}
+                    {{ hidden }}
+                    {% endfor %}
+                    {% for field in form.visible_fields %}
+                    {{ field }}
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
