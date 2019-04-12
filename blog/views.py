@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.shortcuts import render
 from django.views import generic
 from .models import FeedPost, Post, Subscription
@@ -8,14 +9,13 @@ from .models import FeedPost, Post, Subscription
 
 class IndexView(LoginRequiredMixin, generic.ListView):
     template_name = 'index.html'
-    context_object_name = 'user_feed_list'
+    context_object_name = 'posts'
 
     def get_queryset(self):
         """Return the user feed posts ordered by date."""
-        return Post.objects.filter(
-            blog_id=self.kwargs['blog_id']
-        ).order_by('-created').values()
-
+        with transaction.atomic():
+            user_subscriptions = Subscription.objects.values_list('blog').filter(user=self.request.user)
+            return Post.objects.filter(blog__in=user_subscriptions)
 
 class BlogView(LoginRequiredMixin, generic.ListView):
     template_name = 'blog.html'
@@ -48,7 +48,5 @@ class SubscriptionList(LoginRequiredMixin, generic.ListView):
     context_object_name = 'subscriptions'
 
     def get_queryset(self):
-        """Return the user blogs"""
-        subs =  Subscription.objects.filter(user=self.request.user).select_related()
-        print(subs, self.request.user)
-        return subs
+        """Return the user's subscriptions"""
+        return Subscription.objects.filter(user=self.request.user).select_related()

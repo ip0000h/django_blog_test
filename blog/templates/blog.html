@@ -2,8 +2,12 @@
 
 {% block body %}
 
+<h2>Blog posts:</h2>
+
 {% for post in posts %}
-<h2><a href="{% url 'post' pk=post.id %}">{{ post.title }}</a> created: {{ post.created|date:"SHORT_DATETIME_FORMAT" }}</h2>
+<h3>
+    <a href="{% url 'post' pk=post.id %}">{{ post.title }}</a> created: {{ post.created|date:"SHORT_DATETIME_FORMAT" }}
+</h3>
 
 {% endfor %}
 
