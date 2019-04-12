@@ -23,4 +23,5 @@ urlpatterns = [
     path('', IndexView.as_view(), name='index'),
     path('blog/', include('blog.urls')),
     path('accounts/login/', auth_views.LoginView.as_view()),
+    path('accounts/logout/', auth_views.LogoutView.as_view()),
 ]

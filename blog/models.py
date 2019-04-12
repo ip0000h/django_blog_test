@@ -43,3 +43,4 @@ class FeedPost(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name='user',
         on_delete=models.CASCADE)
+    is_read = models.BooleanField(verbose_name='is_read', default=False)

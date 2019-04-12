@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+<h2>Blog list:</h2>
+
+{% for blog in blogs %}
+<h3>
+    <a href="{% url 'blog' blog_id=blog.id %}">{{ blog.username }}</a>
+    <a class="btn btn-primary" id="{{ blog.id }}">Subscribe</a>
+</h3>
+{% endfor %}
+
+{% endblock %}

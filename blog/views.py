@@ -1,8 +1,9 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.views import generic
-from .models import Post, Subscription
+from .models import FeedPost, Post, Subscription
 
 
 class IndexView(LoginRequiredMixin, generic.ListView):
@@ -12,7 +13,7 @@ class IndexView(LoginRequiredMixin, generic.ListView):
     def get_queryset(self):
         """Return the user feed posts ordered by date."""
         return Post.objects.filter(
-            blog_id = self.kwargs['blog_id']
+            blog_id=self.kwargs['blog_id']
         ).order_by('-created').values()
 
 
@@ -23,7 +24,7 @@ class BlogView(LoginRequiredMixin, generic.ListView):
     def get_queryset(self):
         """Return the user blog posts ordered by date."""
         return Post.objects.filter(
-            blog_id = self.kwargs['blog_id']
+            blog_id=self.kwargs['blog_id']
         ).order_by('-created').values()
 
 
@@ -33,10 +34,21 @@ class BlogList(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         """Return the user blogs"""
-        return settings.AUTH_USER_MODEL.objects.order_by('-created').values()
+        return get_user_model().objects.order_by('-date_joined').values()
 
 
 class PostView(LoginRequiredMixin, generic.DetailView):
     model = Post
     template_name = 'post.html'
     context_object_name = 'post'
+
+
+class SubscriptionList(LoginRequiredMixin, generic.ListView):
+    template_name = 'subscriptions.html'
+    context_object_name = 'subscriptions'
+
+    def get_queryset(self):
+        """Return the user blogs"""
+        subs =  Subscription.objects.filter(user=self.request.user).select_related()
+        print(subs, self.request.user)
+        return subs

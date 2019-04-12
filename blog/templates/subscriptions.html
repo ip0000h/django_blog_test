@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+<h2>User subscriptions:</h2>
+
+{% if not subscriptions %}
+<h3>You are not subscribed on any blog</h3>
+{% endif %}
+
+{% for sub in subscriptions %}
+<h3>
+    <a href="{% url 'blog' blog_id=sub.blog.id %}">{{ sub.blog.username }}</a>
+    <a class="btn btn-danger" id="{{ sub.blog.id }}">Unsubscribe</a>
+</h3>
+{% endfor %}
+
+{% endblock %}
