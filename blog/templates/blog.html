@@ -5,9 +5,13 @@
 <h2>Blog posts:</h2>
 
 {% for post in posts %}
-<h3>
+<div>
     <a href="{% url 'post' pk=post.id %}">{{ post.title }}</a> created: {{ post.created|date:"SHORT_DATETIME_FORMAT" }}
-</h3>
+    {% if post.blog_id == user.id %}
+        <a href="{% url 'post-update' pk=post.id %}" class="btn btn-primary">Update</a>
+        <a href="{% url 'post-delete' pk=post.id %}" class="btn btn-danger">Delete</a>
+    {% endif %}
+</div>
 
 {% endfor %}
 
