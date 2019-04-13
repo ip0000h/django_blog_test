@@ -40,7 +40,21 @@ class BlogList(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         """Return the user blogs"""
-        return get_user_model().objects.order_by('-date_joined').values()
+        subscriptions = Subscription.objects.filter(
+            user_id=self.request.user.id
+        ).values_list(
+            'blog_id'
+        )
+        subscriptions = [subscription[0] for subscription in subscriptions]
+        blogs = get_user_model().objects.values(
+            'id',
+            'username',
+        ).order_by(
+            '-date_joined'
+        )
+        for blog in blogs:
+            blog['is_subscribed'] = blog['id'] in subscriptions
+        return blogs
 
 
 class PostView(LoginRequiredMixin, generic.DetailView):
@@ -91,3 +105,26 @@ class SubscriptionList(LoginRequiredMixin, generic.ListView):
         """Return the user's subscriptions"""
         return Subscription.objects.filter(
             user=self.request.user).select_related()
+
+
+class SubscriptionCreateView(LoginRequiredMixin, generic.RedirectView):
+    pattern_name = 'list'
+
+    def get_redirect_url(self, *args, **kwargs):
+        Subscription(
+            blog_id=self.kwargs.get("blog_id"),
+            user_id=self.request.user.id
+        ).save()
+        return super().get_redirect_url()
+
+
+class SubscriptionDeleteView(LoginRequiredMixin, generic.RedirectView):
+    pattern_name = 'list'
+
+    def get_redirect_url(self, *args, **kwargs):
+        get_object_or_404(
+            Subscription,
+            blog_id=self.kwargs.get("blog_id"),
+            user_id=self.request.user.id
+        ).delete()
+        return super().get_redirect_url()
