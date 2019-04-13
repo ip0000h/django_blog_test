@@ -94,6 +94,7 @@ class PostDeleteView(LoginRequiredMixin, generic.DeleteView):
     success_url = reverse_lazy('myposts')
 
     def get(self, request, *args, **kwargs):
+        """Delete post and redirect to user's post page"""
         return self.post(request, *args, **kwargs)
 
 
@@ -111,6 +112,7 @@ class SubscriptionCreateView(LoginRequiredMixin, generic.RedirectView):
     pattern_name = 'list'
 
     def get_redirect_url(self, *args, **kwargs):
+        """Save subscription and redirect to blog list page"""
         Subscription(
             blog_id=self.kwargs.get("blog_id"),
             user_id=self.request.user.id
@@ -122,6 +124,7 @@ class SubscriptionDeleteView(LoginRequiredMixin, generic.RedirectView):
     pattern_name = 'list'
 
     def get_redirect_url(self, *args, **kwargs):
+        """Delete subscription and redirect to blog list page"""
         get_object_or_404(
             Subscription,
             blog_id=self.kwargs.get("blog_id"),

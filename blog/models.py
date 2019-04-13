@@ -7,8 +7,8 @@ class Post(models.Model):
         'created', auto_now_add=True, db_index=True)
     blog = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name='blog',
-        on_delete=models.CASCADE, related_name='posts')
-    title = models.CharField('title', max_length=255, db_index=True)
+        on_delete=models.CASCADE, related_name='posts', db_index=True)
+    title = models.CharField('title', max_length=255)
     post = models.TextField('post')
 
     class Meta:
@@ -26,10 +26,12 @@ class Post(models.Model):
 class Subscription(models.Model):
     blog = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name='blog',
-        on_delete=models.CASCADE, related_name='blog_subscriptions')
+        on_delete=models.CASCADE, related_name='blog_subscriptions',
+        db_index=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name='user',
-        on_delete=models.CASCADE, related_name='user_subscriptions')
+        on_delete=models.CASCADE, related_name='user_subscriptions',
+        db_index=True)
 
     class Meta:
         unique_together = (
@@ -39,8 +41,9 @@ class Subscription(models.Model):
 
 class FeedPost(models.Model):
     post = models.ForeignKey(
-        Post, verbose_name='post', on_delete=models.CASCADE)
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name='user',
-        on_delete=models.CASCADE)
+        Post, verbose_name='post',
+        on_delete=models.CASCADE, db_index=True)
+    subscription = models.ForeignKey(
+        Subscription, verbose_name='subscription',
+        on_delete=models.CASCADE, db_index=True)
     is_read = models.BooleanField(verbose_name='is_read', default=False)
