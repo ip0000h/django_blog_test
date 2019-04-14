@@ -10,13 +10,13 @@
 </head>
 
 <body>
+    {% if user.is_authenticated %}
     <div class="wrapper">
         <div class="navbar navbar-default navbar-static-top">
             <div class="container-fluid">
                 <div class="nav navbar-left">
                     <a href="{% url 'index' %}" class="btn btn-default navbar-btn">Feed</a>
                     <a href="{% url 'list' %}" class="btn btn-default navbar-btn">Blogs</a>
-                    <a href="{% url 'subscriptions' %}" class="btn btn-default navbar-btn">Subscriptions</a>
                     <a href="{% url 'myposts' %}" class="btn btn-default navbar-btn">My posts</a>
                     <a href="{% url 'post-create' %}" class="btn btn-default navbar-btn">Create post</a>
                 </div>
@@ -26,6 +26,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-8">

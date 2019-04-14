@@ -1,11 +1,53 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.mail import send_mail
 from django.db import transaction
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.shortcuts import render, get_object_or_404
 from django.views import generic
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from .models import FeedPost, Post, Subscription
+
+
+def post_after_save(sender, instance, create=True, **kwargs):
+    """
+    Create FeedPost instances and send notifications
+    after creating new post
+    """
+    # get subscriptions
+    subscriptions = Subscription.objects.filter(
+        blog_id=instance.blog_id
+    ).values_list('id', 'user_id')
+    subscriptions_ids = [subscription[0] for subscription in subscriptions]
+    # create FeedPost objects
+    FeedPost.objects.bulk_create(
+        [
+            FeedPost(
+                post_id=instance.id,
+                subscription_id=subscription_id
+            ) for subscription_id in subscriptions_ids
+        ]
+    )
+    # sending emails
+    user_ids = [subscription[1] for subscription in subscriptions]
+    subscription_emails = get_user_model().objects.filter(
+        id__in=user_ids
+    ).values_list('email')
+    subscription_emails = [subscription_email[0] for subscription_email in subscription_emails]
+    send_mail(
+        subject="New post from {}".format(instance.blog.username),
+        message="{} {}{}".format(
+            instance.title,
+            settings.BASE_URL,
+            reverse('post', kwargs={'pk': instance.id})
+        ),
+        from_email=settings.FROM_EMAIL,
+        recipient_list=subscription_emails
+    )
+
+post_save.connect(post_after_save, sender=Post)
 
 
 class IndexView(LoginRequiredMixin, generic.ListView):
@@ -14,12 +56,12 @@ class IndexView(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         """Return the user feed posts ordered by date."""
-        with transaction.atomic():
-            user_subscriptions = Subscription.objects.values_list('blog').filter(
-                user=self.request.user)
-            return Post.objects.filter(
-                blog__in=user_subscriptions
-                ).order_by('-created').values()
+        posts = FeedPost.objects.select_related(
+            'post',
+        ).filter(
+            subscription__user_id=self.request.user.id
+        ).order_by('-post__created')
+        return posts
 
 
 class BlogView(LoginRequiredMixin, generic.ListView):
@@ -98,16 +140,6 @@ class PostDeleteView(LoginRequiredMixin, generic.DeleteView):
         return self.post(request, *args, **kwargs)
 
 
-class SubscriptionList(LoginRequiredMixin, generic.ListView):
-    template_name = 'subscriptions.html'
-    context_object_name = 'subscriptions'
-
-    def get_queryset(self):
-        """Return the user's subscriptions"""
-        return Subscription.objects.filter(
-            user=self.request.user).select_related()
-
-
 class SubscriptionCreateView(LoginRequiredMixin, generic.RedirectView):
     pattern_name = 'list'
 
@@ -130,4 +162,18 @@ class SubscriptionDeleteView(LoginRequiredMixin, generic.RedirectView):
             blog_id=self.kwargs.get("blog_id"),
             user_id=self.request.user.id
         ).delete()
+        return super().get_redirect_url()
+
+
+class PostMakeReadView(LoginRequiredMixin, generic.RedirectView):
+    pattern_name = 'index'
+
+    def get_redirect_url(self, *args, **kwargs):
+        """Save subscription and redirect to blog list page"""
+        feed_post = get_object_or_404(
+            FeedPost,
+            pk=self.kwargs.get("pk"),
+        )
+        feed_post.is_read = True
+        feed_post.save()
         return super().get_redirect_url()

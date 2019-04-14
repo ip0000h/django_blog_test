@@ -14,7 +14,7 @@ class Post(models.Model):
     class Meta:
         verbose_name = 'post'
         verbose_name_plural = 'posts'
-        ordering = ('title',)
+        ordering = ('-created',)
         unique_together = (
             ('blog', 'title'),
         )
@@ -42,7 +42,8 @@ class Subscription(models.Model):
 class FeedPost(models.Model):
     post = models.ForeignKey(
         Post, verbose_name='post',
-        on_delete=models.CASCADE, db_index=True)
+        on_delete=models.CASCADE, related_name='feed_posts',
+        db_index=True)
     subscription = models.ForeignKey(
         Subscription, verbose_name='subscription',
         on_delete=models.CASCADE, db_index=True)

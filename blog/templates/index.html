@@ -6,10 +6,9 @@
 
 {% for post in posts %}
 <div>
-    <a href="{% url 'post' pk=post.id %}">{{ post.title }}</a> created: {{ post.created|date:"SHORT_DATETIME_FORMAT" }}
-    {% if post.blog_id == user.id %}
-        <a href="{% url 'post-update' pk=post.id %}" class="btn btn-primary">Update</a>
-        <a href="{% url 'post-delete' pk=post.id %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'post' pk=post.post.id %}">{{ post.post.title }}</a> created: {{ post.post.created|date:"SHORT_DATETIME_FORMAT" }}
+    {% if not post.is_read %}
+        <a href="{% url 'make-post-read' pk=post.id %}" class="btn btn-primary">Mark read</a>
     {% endif %}
 </div>
 
