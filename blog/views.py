@@ -50,6 +50,28 @@ def post_after_save(sender, instance, create=True, **kwargs):
 post_save.connect(post_after_save, sender=Post)
 
 
+def subscription_after_save(sender, instance, create=True, **kwargs):
+    """
+    Create FeedPost instances after creating new subscription
+    """
+    # get subscriptions
+    posts = Post.objects.filter(
+        blog_id=instance.blog_id
+    ).values_list('id')
+    post_ids = [post[0] for post in posts]
+    # create FeedPost objects
+    FeedPost.objects.bulk_create(
+        [
+            FeedPost(
+                post_id=post_id,
+                subscription_id=instance.id
+            ) for post_id in post_ids
+        ]
+    )
+
+post_save.connect(subscription_after_save, sender=Subscription)
+
+
 class IndexView(LoginRequiredMixin, generic.ListView):
     template_name = 'index.html'
     context_object_name = 'posts'
